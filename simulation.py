@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# md5: 01e870c930575f64e2f02245b8ec6f8d
+# md5: 8e71009e71cfea378a4b77d244aee94a
 #!/usr/bin/env python
 # coding: utf-8
 
@@ -14,6 +14,7 @@ from core.db import DbConnection
 
 #import yaml
 #import collections
+import time
 import utils.config
 from prometheus_client import Counter
 from core.timer import Timer
@@ -28,6 +29,8 @@ config['RDConfig']['pwd'] = getsecret('lilt_redis_password')
 
 import sys
 langpair_arg = sys.argv[1]
+#src_lang = 'en'
+#trg_lang = 'zh'
 src_lang = langpair_arg[:2] #'en'
 trg_lang = langpair_arg[2:] #'zh'
 
@@ -110,11 +113,10 @@ def translate(sentence, prefix=''):
   translation = response[0]['translation'][0]
   return translation['targetWords'], translation['targetDelimiters'] # translation['target'],
 
-translate('hello world')
+#translate('hello world')
 
 
 
-import time
 #print(time.perf_counter())
 
 
@@ -199,10 +201,10 @@ def simulate_words_that_need_to_be_typed(src_sentence, trg_sentence, verbose=Tru
   trg_delimiters = trg_sentence_segmented.delimiters
   src_tokens = src_sentence_segmented.tokens
   trg_tokens = trg_sentence_segmented.tokens
-  print(src_tokens)
-  print(src_delimiters)
-  print(trg_tokens)
-  print(trg_delimiters)
+  #print(src_tokens)
+  #print(src_delimiters)
+  #print(trg_tokens)
+  #print(trg_delimiters)
   word_start_idx = 0
   to_print = []
   num_correct_predictions = 0
@@ -236,12 +238,14 @@ def simulate_words_that_need_to_be_typed(src_sentence, trg_sentence, verbose=Tru
       is_next_actual_word_anywhere_in_suffix = next_actual_word in remaining_predicted_words
       num_total_predictions += 1
       if correct:
-        output.append([elapsed_time, is_mt_recompute_needed, next_actual_word, next_predicted_word, is_next_actual_word_anywhere_in_suffix])
+        output.append([elapsed_time, is_mt_recompute_needed, next_actual_word, remaining_predicted_words, remaining_predicted_delimiters])
+        #output.append([elapsed_time, is_mt_recompute_needed, next_actual_word, next_predicted_word, is_next_actual_word_anywhere_in_suffix])
         is_mt_recompute_needed = False
         num_correct_predictions += 1
         to_print.append('correctly predicted: ' + next_actual_word)
       else:
-        output.append([elapsed_time, is_mt_recompute_needed, next_actual_word, next_predicted_word, is_next_actual_word_anywhere_in_suffix])
+        output.append([elapsed_time, is_mt_recompute_needed, next_actual_word, remaining_predicted_words, remaining_predicted_delimiters])
+        #output.append([elapsed_time, is_mt_recompute_needed, next_actual_word, next_predicted_word, is_next_actual_word_anywhere_in_suffix])
         is_mt_recompute_needed = True
         to_print.append('incorrectly predicted: ' + next_predicted_word + ' actual word is: ' + next_actual_word)
     #to_print.append('remaining predicted words: ' + str(remaining_predicted_words))
@@ -263,23 +267,51 @@ def simulate_words_that_need_to_be_typed(src_sentence, trg_sentence, verbose=Tru
 
 
 
+# import msgpack
+# import rocksdb
+# cache_db = rocksdb.DB('simulation_cache/' + langpair_arg, rocksdb.Options(create_if_missing=True))
+# translation_cache_db = rocksdb.DB('translation_cache/' + langpair_arg, rocksdb.Options(create_if_missing=True))
+
+
+
 import msgpack
-import rocksdb
-cache_db = rocksdb.DB('simulation_cache/' + langpair_arg, rocksdb.Options(create_if_missing=True))
-translation_cache_db = rocksdb.DB('translation_cache/' + langpair_arg, rocksdb.Options(create_if_missing=True))
+import lmdb
+
+cache_db = lmdb.open('simulation_cache/' + langpair_arg, map_size=34359738368, sync=True, map_async=False, writemap=False)
+translation_cache_db = lmdb.open('translation_cache/' + langpair_arg, map_size=34359738368, sync=True, map_async=False, writemap=False)
 
 
 
 def simulate_words_that_need_to_be_typed_cached(src_sentence, trg_sentence):
   key = msgpack.dumps([src_sentence, trg_sentence])
-  cached_result = cache_db.get(key)
+  txn = cache_db.begin()
+  cached_result = txn.get(key)
+  txn = None
+  #cached_result = cache_db.get(key)
   if cached_result is None:
-    cached_result = simulate_words_that_need_to_be_typed(src_sentence, trg_sentence, verbose=False)
-    cache_db.put(key, msgpack.dumps(cached_result))
+    txn = cache_db.begin(write=True)
+    cached_result = simulate_words_that_need_to_be_typed(src_sentence, trg_sentence)
+    txn.put(key, msgpack.dumps(cached_result))
+    txn.commit()
+    txn = None
+    #cache_db.put(key, msgpack.dumps(cached_result))
     return cached_result
   else:
     return msgpack.loads(cached_result, raw=False, strict_map_key=False)
 
+def get_translation_cached(src_sentence):
+  src_sentence_key = msgpack.dumps(src_sentence)
+  txn = translation_cache_db.begin()
+  cached_translation = txn.get(src_sentence_key)
+  txn = None
+  if cached_translation is not None:
+    return msgpack.loads(cached_translation, raw=False, strict_map_key=False)
+  predicted_words, predicted_delimiters = translate(src_sentence, '')
+  txn = translation_cache_db.begin(write=True)
+  txn.put(src_sentence_key, msgpack.dumps([predicted_words, predicted_delimiters]))
+  txn.commit()
+  txn = None
+  return [predicted_words, predicted_delimiters]
 
 # results = simulate_words_that_need_to_be_typed_cached(
 #   "In the past 20 years, China's online industry has rapidly developed, relying on the massive Chinese market, it has produced massive companies that are evenly matched with American and European internet giants, such as Alibaba, Tencent, Baidu, Meituan, JD, ByteDance, and more.",
@@ -329,20 +361,19 @@ for source_file_idx,source_file in enumerate(source_files):
   src_lang = langpair[0:2]
   trg_lang = langpair[2:]
   for src_sentence,trg_sentence in zip(source_lines, target_lines):
-    src_sentence_key = msgpack.dumps(src_sentence)
-    cached_translation = translation_cache_db.get(src_sentence_key)
-    if cached_translation is None:
-      try:
-        predicted_words, predicted_delimiters = translate(src_sentence, '')
-      except:
-        continue
-      translation_cache_db.put(src_sentence_key, msgpack.dumps([predicted_words, predicted_delimiters]))
+    try:
+      get_translation_cached(src_sentence)
+    except:
+      continue
     try:
       simulate_words_that_need_to_be_typed_cached(src_sentence, trg_sentence)
     except:
       continue
 
 
+
+cache_db_txn = cache_db.begin()
+translation_cache_db_txn = translation_cache_db.begin()
 
 source_file_to_google = {}
 source_files = glob.glob('/Users/geza/intel_evaluation/GCP_translate_test/**/**/**/source.txt')
@@ -377,7 +408,7 @@ for source_file in source_files:
   trg_lang = langpair[2:]
   for src_sentence,trg_sentence,google_translate in zip(source_lines, target_lines, google_translate_lines):
     key = msgpack.dumps([src_sentence, trg_sentence])
-    cached_result = cache_db.get(key)
+    cached_result = cache_db_txn.get(key)
     if cached_result is not None:
       output = msgpack.loads(cached_result, raw=False, strict_map_key=False)
       output_list.append([src_sentence, trg_sentence, output, google_translate])
@@ -387,7 +418,7 @@ msgpack.dump(output_list, open('simulation_output_list/' + langpair_arg + '.msgp
 translation_dict = {}
 for src_sentence,trg_sentence,output,google_translate in output_list:
   key = msgpack.dumps(src_sentence)
-  cached_result = translation_cache_db.get(key)
+  cached_result = translation_cache_db_txn.get(key)
   if cached_result is not None:
     word_list,delimiter_list = msgpack.loads(cached_result)
     translation_dict[src_sentence] = [word_list, delimiter_list]
