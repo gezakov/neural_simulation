@@ -14256,10 +14256,10 @@ a.anchor-link {
     </script>
     <!-- End of mathjax configuration --></head>
 <body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[&nbsp;]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[43]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># noexport</span>
@@ -14270,6 +14270,28 @@ a.anchor-link {
      </div>
 </div>
 </div>
+</div>
+
+<div class="jp-Cell-outputWrapper">
+
+
+<div class="jp-OutputArea jp-Cell-outputArea">
+
+<div class="jp-OutputArea-child">
+
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+
+
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+<pre>[NbConvertApp] Converting notebook visualize_simulation_results.ipynb to html
+[NbConvertApp] Writing 868918 bytes to visualize_simulation_results.html
+</pre>
+</div>
+</div>
+
+</div>
+
 </div>
 
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
@@ -14296,6 +14318,7 @@ a.anchor-link {
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># noexport</span>
 
+<span class="kn">from</span> <span class="nn">pylcs</span> <span class="kn">import</span> <span class="n">lcs</span>
 <span class="kn">import</span> <span class="nn">msgpack</span>
 <span class="c1">#import rocksdb</span>
 <span class="kn">import</span> <span class="nn">glob</span>
@@ -14694,6 +14717,753 @@ FileNotFoundError: Java was not found, please install JRE or JDK &gt;= 1.8 first
      </div>
 </div>
 </div>
+</div>
+
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[50]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># developing algorithm for alignment here</span>
+
+<span class="c1"># noexport</span>
+
+<span class="n">langpair_to_lilt_fixedmt_heuristic_accuracy</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">langpair_arg</span> <span class="ow">in</span> <span class="n">langpair_list</span><span class="p">:</span>
+  <span class="n">words_correct</span> <span class="o">=</span> <span class="mi">0</span>
+  <span class="n">words_total</span> <span class="o">=</span> <span class="mi">0</span>
+  <span class="nb">print</span><span class="p">(</span><span class="n">langpair_arg</span><span class="p">)</span>
+  <span class="c1">#cache_db = langpair_to_cache_db[langpair_arg]</span>
+  <span class="c1">#translation_cache_db = langpair_to_translation_db[langpair_arg]</span>
+  <span class="n">translation_dict</span> <span class="o">=</span> <span class="n">msgpack</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;translation_dict/&#39;</span> <span class="o">+</span> <span class="n">langpair_arg</span> <span class="o">+</span> <span class="s1">&#39;.msgpack&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">),</span> <span class="n">raw</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">strict_map_key</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+  <span class="n">output_list</span> <span class="o">=</span> <span class="n">msgpack</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;simulation_output_list/&#39;</span> <span class="o">+</span> <span class="n">langpair_arg</span> <span class="o">+</span> <span class="s1">&#39;.msgpack&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">),</span> <span class="n">raw</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">strict_map_key</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+  <span class="k">for</span> <span class="n">src_sentence</span><span class="p">,</span><span class="n">trg_sentence</span><span class="p">,</span><span class="n">output</span><span class="p">,</span><span class="n">google_translate</span> <span class="ow">in</span> <span class="n">output_list</span><span class="p">:</span>
+    <span class="c1">#key = msgpack.dumps(src_sentence)</span>
+    <span class="n">word_list</span><span class="p">,</span><span class="n">delimiter_list</span> <span class="o">=</span> <span class="n">translation_dict</span><span class="p">[</span><span class="n">src_sentence</span><span class="p">]</span>
+    <span class="c1">#cached_result = translation_cache_db.get(key)</span>
+    <span class="c1">#word_set = set(word_list)</span>
+    <span class="n">word_to_idx_list</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span><span class="n">word</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">word_list</span><span class="p">):</span>
+      <span class="k">if</span> <span class="n">word</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">word_to_idx_list</span><span class="p">:</span>
+        <span class="n">word_to_idx_list</span><span class="p">[</span><span class="n">word</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+      <span class="n">word_to_idx_list</span><span class="p">[</span><span class="n">word</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+    <span class="n">predicted_word_idx</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">prev_ref_word_idx</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">word_to_times_seen</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">word_info</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
+      <span class="n">word_ref</span> <span class="o">=</span> <span class="n">word_info</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+      <span class="n">predicted_word_idx</span> <span class="o">=</span> <span class="n">prev_ref_word_idx</span> <span class="o">+</span> <span class="mi">1</span>
+      <span class="n">predicted_word</span> <span class="o">=</span> <span class="kc">None</span>
+      <span class="k">if</span> <span class="n">predicted_word_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">word_list</span><span class="p">):</span>
+        <span class="n">predicted_word</span> <span class="o">=</span> <span class="n">word_list</span><span class="p">[</span><span class="n">predicted_word_idx</span><span class="p">]</span>
+      <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">word_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">predicted_word</span> <span class="o">=</span> <span class="n">word_list</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">word_list</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+      <span class="k">if</span> <span class="n">predicted_word</span> <span class="o">==</span> <span class="n">word_ref</span><span class="p">:</span>
+        <span class="n">words_correct</span> <span class="o">+=</span> <span class="mi">1</span>
+      <span class="k">if</span> <span class="n">word_ref</span> <span class="ow">in</span> <span class="n">word_to_idx_list</span><span class="p">:</span>
+        <span class="n">num_times_seen</span> <span class="o">=</span> <span class="n">word_to_times_seen</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">word_ref</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">word_to_times_seen</span><span class="p">[</span><span class="n">word_ref</span><span class="p">]</span> <span class="o">=</span> <span class="n">num_times_seen</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">word_idx_list</span> <span class="o">=</span> <span class="n">word_to_idx_list</span><span class="p">[</span><span class="n">word_ref</span><span class="p">]</span>
+        <span class="n">prev_ref_word_idx</span> <span class="o">=</span> <span class="n">word_idx_list</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">num_times_seen</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">word_idx_list</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+      <span class="k">if</span> <span class="n">word_ref</span> <span class="ow">in</span> <span class="n">word_set</span><span class="p">:</span>
+        <span class="n">words_correct</span> <span class="o">+=</span> <span class="mi">1</span>
+      <span class="n">words_total</span> <span class="o">+=</span> <span class="mi">1</span>
+  <span class="nb">print</span><span class="p">(</span><span class="n">words_total</span><span class="p">)</span>
+  <span class="nb">print</span><span class="p">(</span><span class="n">words_correct</span><span class="p">)</span>
+  <span class="n">langpair_to_lilt_fixedmt_heuristic_accuracy</span><span class="p">[</span><span class="n">langpair_arg</span><span class="p">]</span> <span class="o">=</span> <span class="n">words_correct</span> <span class="o">/</span> <span class="n">words_total</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+<div class="jp-Cell-outputWrapper">
+
+
+<div class="jp-OutputArea jp-Cell-outputArea">
+
+<div class="jp-OutputArea-child">
+
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+
+
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+<pre>ende
+106285
+38552
+enes
+132783
+62824
+enfr
+190712
+83862
+enit
+138906
+62921
+enja
+242645
+87800
+enko
+91416
+33341
+enpt
+59518
+29853
+enzh
+177114
+89074
+enzt
+182927
+91075
+</pre>
+</div>
+</div>
+
+</div>
+
+</div>
+
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[62]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># developing algorithm for alignment here</span>
+
+<span class="c1"># noexport</span>
+
+<span class="n">langpair_to_lilt_fixedmt_heuristic_v2_accuracy</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">langpair_arg</span> <span class="ow">in</span> <span class="n">langpair_list</span><span class="p">:</span>
+  <span class="n">words_correct</span> <span class="o">=</span> <span class="mi">0</span>
+  <span class="n">words_total</span> <span class="o">=</span> <span class="mi">0</span>
+  <span class="nb">print</span><span class="p">(</span><span class="n">langpair_arg</span><span class="p">)</span>
+  <span class="c1">#cache_db = langpair_to_cache_db[langpair_arg]</span>
+  <span class="c1">#translation_cache_db = langpair_to_translation_db[langpair_arg]</span>
+  <span class="n">translation_dict</span> <span class="o">=</span> <span class="n">msgpack</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;translation_dict/&#39;</span> <span class="o">+</span> <span class="n">langpair_arg</span> <span class="o">+</span> <span class="s1">&#39;.msgpack&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">),</span> <span class="n">raw</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">strict_map_key</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+  <span class="n">output_list</span> <span class="o">=</span> <span class="n">msgpack</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;simulation_output_list/&#39;</span> <span class="o">+</span> <span class="n">langpair_arg</span> <span class="o">+</span> <span class="s1">&#39;.msgpack&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">),</span> <span class="n">raw</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">strict_map_key</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+  <span class="k">for</span> <span class="n">src_sentence</span><span class="p">,</span><span class="n">trg_sentence</span><span class="p">,</span><span class="n">output</span><span class="p">,</span><span class="n">google_translate</span> <span class="ow">in</span> <span class="n">output_list</span><span class="p">:</span>
+    <span class="c1">#key = msgpack.dumps(src_sentence)</span>
+    <span class="n">word_list</span><span class="p">,</span><span class="n">delimiter_list</span> <span class="o">=</span> <span class="n">translation_dict</span><span class="p">[</span><span class="n">src_sentence</span><span class="p">]</span>
+    <span class="c1">#cached_result = translation_cache_db.get(key)</span>
+    <span class="c1">#word_set = set(word_list)</span>
+    <span class="n">word_to_idx_list</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span><span class="n">word</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">word_list</span><span class="p">):</span>
+      <span class="k">if</span> <span class="n">word</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">word_to_idx_list</span><span class="p">:</span>
+        <span class="n">word_to_idx_list</span><span class="p">[</span><span class="n">word</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+      <span class="n">word_to_idx_list</span><span class="p">[</span><span class="n">word</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+    <span class="n">predicted_word_idx</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">prev_ref_word_idx</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">word_to_times_seen</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">word_info</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
+      <span class="n">word_ref</span> <span class="o">=</span> <span class="n">word_info</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+      <span class="n">predicted_word_idx</span> <span class="o">=</span> <span class="n">prev_ref_word_idx</span> <span class="o">+</span> <span class="mi">1</span>
+      <span class="n">predicted_word</span> <span class="o">=</span> <span class="kc">None</span>
+      <span class="k">if</span> <span class="n">predicted_word_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">word_list</span><span class="p">):</span>
+        <span class="n">predicted_word</span> <span class="o">=</span> <span class="n">word_list</span><span class="p">[</span><span class="n">predicted_word_idx</span><span class="p">]</span>
+      <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">word_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">predicted_word</span> <span class="o">=</span> <span class="n">word_list</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">word_list</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+      <span class="k">if</span> <span class="n">predicted_word</span> <span class="o">==</span> <span class="n">word_ref</span><span class="p">:</span>
+        <span class="n">words_correct</span> <span class="o">+=</span> <span class="mi">1</span>
+      <span class="k">if</span> <span class="n">word_ref</span> <span class="ow">in</span> <span class="n">word_to_idx_list</span><span class="p">:</span>
+        <span class="n">num_times_seen</span> <span class="o">=</span> <span class="n">word_to_times_seen</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">word_ref</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">word_to_times_seen</span><span class="p">[</span><span class="n">word_ref</span><span class="p">]</span> <span class="o">=</span> <span class="n">num_times_seen</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">word_idx_list</span> <span class="o">=</span> <span class="n">word_to_idx_list</span><span class="p">[</span><span class="n">word_ref</span><span class="p">]</span>
+        <span class="n">prev_ref_word_idx</span> <span class="o">=</span> <span class="n">word_idx_list</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">num_times_seen</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">word_idx_list</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">prev_ref_word_idx</span> <span class="o">+=</span> <span class="mi">1</span>
+      <span class="k">if</span> <span class="n">word_ref</span> <span class="ow">in</span> <span class="n">word_set</span><span class="p">:</span>
+        <span class="n">words_correct</span> <span class="o">+=</span> <span class="mi">1</span>
+      <span class="n">words_total</span> <span class="o">+=</span> <span class="mi">1</span>
+  <span class="nb">print</span><span class="p">(</span><span class="n">words_total</span><span class="p">)</span>
+  <span class="nb">print</span><span class="p">(</span><span class="n">words_correct</span><span class="p">)</span>
+  <span class="n">langpair_to_lilt_fixedmt_heuristic_v2_accuracy</span><span class="p">[</span><span class="n">langpair_arg</span><span class="p">]</span> <span class="o">=</span> <span class="n">words_correct</span> <span class="o">/</span> <span class="n">words_total</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+<div class="jp-Cell-outputWrapper">
+
+
+<div class="jp-OutputArea jp-Cell-outputArea">
+
+<div class="jp-OutputArea-child">
+
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+
+
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+<pre>ende
+106285
+43726
+enes
+132783
+68632
+enfr
+190712
+91364
+enit
+138906
+69153
+enja
+242645
+94821
+enko
+91416
+38733
+enpt
+59518
+32493
+enzh
+177114
+100864
+enzt
+182927
+102707
+</pre>
+</div>
+</div>
+
+</div>
+
+</div>
+
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[63]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># developing algorithm for alignment here</span>
+
+<span class="c1"># noexport</span>
+
+<span class="n">langpair_to_lilt_fixedmt_heuristic_v3_accuracy</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">langpair_arg</span> <span class="ow">in</span> <span class="n">langpair_list</span><span class="p">:</span>
+  <span class="n">src_lang</span> <span class="o">=</span> <span class="n">langpair_arg</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+  <span class="n">trg_lang</span> <span class="o">=</span> <span class="n">langpair_arg</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+  <span class="n">words_correct</span> <span class="o">=</span> <span class="mi">0</span>
+  <span class="n">words_total</span> <span class="o">=</span> <span class="mi">0</span>
+  <span class="nb">print</span><span class="p">(</span><span class="n">langpair_arg</span><span class="p">)</span>
+  <span class="c1">#cache_db = langpair_to_cache_db[langpair_arg]</span>
+  <span class="c1">#translation_cache_db = langpair_to_translation_db[langpair_arg]</span>
+  <span class="n">translation_dict</span> <span class="o">=</span> <span class="n">msgpack</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;translation_dict/&#39;</span> <span class="o">+</span> <span class="n">langpair_arg</span> <span class="o">+</span> <span class="s1">&#39;.msgpack&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">),</span> <span class="n">raw</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">strict_map_key</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+  <span class="n">output_list</span> <span class="o">=</span> <span class="n">msgpack</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;simulation_output_list/&#39;</span> <span class="o">+</span> <span class="n">langpair_arg</span> <span class="o">+</span> <span class="s1">&#39;.msgpack&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">),</span> <span class="n">raw</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">strict_map_key</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+  <span class="k">for</span> <span class="n">src_sentence</span><span class="p">,</span><span class="n">trg_sentence</span><span class="p">,</span><span class="n">output</span><span class="p">,</span><span class="n">google_translate</span> <span class="ow">in</span> <span class="n">output_list</span><span class="p">:</span>
+    <span class="c1">#key = msgpack.dumps(src_sentence)</span>
+    <span class="n">word_list</span><span class="p">,</span><span class="n">delimiter_list</span> <span class="o">=</span> <span class="n">translation_dict</span><span class="p">[</span><span class="n">src_sentence</span><span class="p">]</span>
+    <span class="c1">#cached_result = translation_cache_db.get(key)</span>
+    <span class="c1">#word_set = set(word_list)</span>
+    <span class="n">word_to_idx_list</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span><span class="n">word</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">word_list</span><span class="p">):</span>
+      <span class="k">if</span> <span class="n">word</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">word_to_idx_list</span><span class="p">:</span>
+        <span class="n">word_to_idx_list</span><span class="p">[</span><span class="n">word</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+      <span class="n">word_to_idx_list</span><span class="p">[</span><span class="n">word</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+    <span class="n">predicted_word_idx</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">prev_ref_word_idx</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">word_to_times_seen</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">word_info</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
+      <span class="n">word_ref</span> <span class="o">=</span> <span class="n">word_info</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+      <span class="n">predicted_word_idx</span> <span class="o">=</span> <span class="n">prev_ref_word_idx</span> <span class="o">+</span> <span class="mi">1</span>
+      <span class="n">predicted_word</span> <span class="o">=</span> <span class="kc">None</span>
+      <span class="k">if</span> <span class="n">predicted_word_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">word_list</span><span class="p">):</span>
+        <span class="n">predicted_word</span> <span class="o">=</span> <span class="n">word_list</span><span class="p">[</span><span class="n">predicted_word_idx</span><span class="p">]</span>
+      <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">word_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">predicted_word</span> <span class="o">=</span> <span class="n">word_list</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">word_list</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+      <span class="k">if</span> <span class="n">predicted_word</span> <span class="o">==</span> <span class="n">word_ref</span><span class="p">:</span>
+        <span class="n">words_correct</span> <span class="o">+=</span> <span class="mi">1</span>
+      <span class="k">if</span> <span class="n">word_ref</span> <span class="ow">in</span> <span class="n">word_to_idx_list</span><span class="p">:</span>
+        <span class="n">num_times_seen</span> <span class="o">=</span> <span class="n">word_to_times_seen</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">word_ref</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">word_to_times_seen</span><span class="p">[</span><span class="n">word_ref</span><span class="p">]</span> <span class="o">=</span> <span class="n">num_times_seen</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">word_idx_list</span> <span class="o">=</span> <span class="n">word_to_idx_list</span><span class="p">[</span><span class="n">word_ref</span><span class="p">]</span>
+        <span class="n">prev_ref_word_idx</span> <span class="o">=</span> <span class="n">word_idx_list</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">num_times_seen</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">word_idx_list</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">best_lcs_ratio</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">best_lcs_words</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span><span class="n">word</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">word_to_idx_list</span><span class="p">):</span>
+          <span class="n">lcs_len</span> <span class="o">=</span> <span class="n">lcs</span><span class="p">(</span><span class="n">word</span><span class="p">,</span> <span class="n">word_ref</span><span class="p">)</span>
+          <span class="k">if</span> <span class="n">lcs_len</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">continue</span>
+          <span class="n">lcs_ratio</span> <span class="o">=</span> <span class="n">lcs_len</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">word</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">word_ref</span><span class="p">))</span>
+          <span class="k">if</span> <span class="n">lcs_ratio</span> <span class="o">&gt;</span> <span class="n">best_lcs_ratio</span><span class="p">:</span>
+            <span class="n">best_lcs_ratio</span> <span class="o">=</span> <span class="n">lcs_ratio</span>
+            <span class="n">best_lcs_words</span> <span class="o">=</span> <span class="p">[</span><span class="n">word</span><span class="p">]</span>
+          <span class="k">elif</span> <span class="n">lcs_ratio</span> <span class="o">==</span> <span class="n">best_lcs_ratio</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">word</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">best_lcs_words</span><span class="p">:</span>
+              <span class="n">best_lcs_words</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">word</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">best_lcs_ratio</span> <span class="o">&gt;=</span> <span class="mf">0.5</span><span class="p">:</span>
+          <span class="k">for</span> <span class="n">word_matched</span> <span class="ow">in</span> <span class="n">best_lcs_words</span><span class="p">:</span>
+            <span class="n">num_times_seen</span> <span class="o">=</span> <span class="n">word_to_times_seen</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">word_matched</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">word_idx_list</span> <span class="o">=</span> <span class="n">word_to_idx_list</span><span class="p">[</span><span class="n">word_matched</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">num_times_seen</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">word_idx_list</span><span class="p">):</span>
+              <span class="c1"># already seen this word enough times</span>
+              <span class="k">continue</span>
+            <span class="n">word_to_times_seen</span><span class="p">[</span><span class="n">word_matched</span><span class="p">]</span> <span class="o">=</span> <span class="n">num_times_seen</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">prev_ref_word_idx</span> <span class="o">=</span> <span class="n">word_idx_list</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">num_times_seen</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">word_idx_list</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="n">prev_ref_word_idx</span> <span class="o">+=</span> <span class="mi">1</span>
+      <span class="k">if</span> <span class="n">word_ref</span> <span class="ow">in</span> <span class="n">word_set</span><span class="p">:</span>
+        <span class="n">words_correct</span> <span class="o">+=</span> <span class="mi">1</span>
+      <span class="n">words_total</span> <span class="o">+=</span> <span class="mi">1</span>
+  <span class="nb">print</span><span class="p">(</span><span class="n">words_total</span><span class="p">)</span>
+  <span class="nb">print</span><span class="p">(</span><span class="n">words_correct</span><span class="p">)</span>
+  <span class="n">langpair_to_lilt_fixedmt_heuristic_v3_accuracy</span><span class="p">[</span><span class="n">langpair_arg</span><span class="p">]</span> <span class="o">=</span> <span class="n">words_correct</span> <span class="o">/</span> <span class="n">words_total</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+<div class="jp-Cell-outputWrapper">
+
+
+<div class="jp-OutputArea jp-Cell-outputArea">
+
+<div class="jp-OutputArea-child">
+
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+
+
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+<pre>ende
+106285
+44622
+enes
+132783
+69549
+enfr
+190712
+92977
+enit
+138906
+70023
+enja
+242645
+96606
+enko
+91416
+39475
+enpt
+59518
+33031
+enzh
+177114
+101995
+enzt
+182927
+104146
+</pre>
+</div>
+</div>
+
+</div>
+
+</div>
+
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[40]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># developing algorithm for alignment here</span>
+
+<span class="c1"># noexport</span>
+
+<span class="n">langpair_to_google_heuristic_accuracy</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">langpair_arg</span> <span class="ow">in</span> <span class="n">langpair_list</span><span class="p">:</span>
+  <span class="n">src_lang</span> <span class="o">=</span> <span class="n">langpair_arg</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+  <span class="n">trg_lang</span> <span class="o">=</span> <span class="n">langpair_arg</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+  <span class="n">words_correct</span> <span class="o">=</span> <span class="mi">0</span>
+  <span class="n">words_total</span> <span class="o">=</span> <span class="mi">0</span>
+  <span class="nb">print</span><span class="p">(</span><span class="n">langpair_arg</span><span class="p">)</span>
+  <span class="c1">#cache_db = langpair_to_cache_db[langpair_arg]</span>
+  <span class="c1">#translation_cache_db = langpair_to_translation_db[langpair_arg]</span>
+  <span class="n">translation_dict</span> <span class="o">=</span> <span class="n">msgpack</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;translation_dict/&#39;</span> <span class="o">+</span> <span class="n">langpair_arg</span> <span class="o">+</span> <span class="s1">&#39;.msgpack&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">),</span> <span class="n">raw</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">strict_map_key</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+  <span class="n">output_list</span> <span class="o">=</span> <span class="n">msgpack</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;simulation_output_list/&#39;</span> <span class="o">+</span> <span class="n">langpair_arg</span> <span class="o">+</span> <span class="s1">&#39;.msgpack&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">),</span> <span class="n">raw</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">strict_map_key</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+  <span class="k">for</span> <span class="n">src_sentence</span><span class="p">,</span><span class="n">trg_sentence</span><span class="p">,</span><span class="n">output</span><span class="p">,</span><span class="n">google_translate</span> <span class="ow">in</span> <span class="n">output_list</span><span class="p">:</span>
+    <span class="c1">#key = msgpack.dumps(src_sentence)</span>
+    <span class="n">segmented_google_translate</span> <span class="o">=</span> <span class="n">segment_sentence</span><span class="p">(</span><span class="n">google_translate</span><span class="p">,</span> <span class="n">trg_lang</span><span class="p">)</span>
+    <span class="n">word_list</span> <span class="o">=</span> <span class="n">segmented_google_translate</span><span class="o">.</span><span class="n">tokens</span>
+    <span class="n">delimiter_list</span> <span class="o">=</span> <span class="n">segmented_google_translate</span><span class="o">.</span><span class="n">delimiters</span>
+    <span class="c1">#cached_result = translation_cache_db.get(key)</span>
+    <span class="c1">#word_set = set(word_list)</span>
+    <span class="n">word_to_idx_list</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span><span class="n">word</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">word_list</span><span class="p">):</span>
+      <span class="k">if</span> <span class="n">word</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">word_to_idx_list</span><span class="p">:</span>
+        <span class="n">word_to_idx_list</span><span class="p">[</span><span class="n">word</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+      <span class="n">word_to_idx_list</span><span class="p">[</span><span class="n">word</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+    <span class="n">predicted_word_idx</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">prev_ref_word_idx</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">word_to_times_seen</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">word_info</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
+      <span class="n">word_ref</span> <span class="o">=</span> <span class="n">word_info</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+      <span class="n">predicted_word_idx</span> <span class="o">=</span> <span class="n">prev_ref_word_idx</span> <span class="o">+</span> <span class="mi">1</span>
+      <span class="n">predicted_word</span> <span class="o">=</span> <span class="kc">None</span>
+      <span class="k">if</span> <span class="n">predicted_word_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">word_list</span><span class="p">):</span>
+        <span class="n">predicted_word</span> <span class="o">=</span> <span class="n">word_list</span><span class="p">[</span><span class="n">predicted_word_idx</span><span class="p">]</span>
+      <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">word_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">predicted_word</span> <span class="o">=</span> <span class="n">word_list</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">word_list</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+      <span class="k">if</span> <span class="n">predicted_word</span> <span class="o">==</span> <span class="n">word_ref</span><span class="p">:</span>
+        <span class="n">words_correct</span> <span class="o">+=</span> <span class="mi">1</span>
+      <span class="k">if</span> <span class="n">word_ref</span> <span class="ow">in</span> <span class="n">word_to_idx_list</span><span class="p">:</span>
+        <span class="n">num_times_seen</span> <span class="o">=</span> <span class="n">word_to_times_seen</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">word_ref</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">word_to_times_seen</span><span class="p">[</span><span class="n">word_ref</span><span class="p">]</span> <span class="o">=</span> <span class="n">num_times_seen</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">word_idx_list</span> <span class="o">=</span> <span class="n">word_to_idx_list</span><span class="p">[</span><span class="n">word_ref</span><span class="p">]</span>
+        <span class="n">prev_ref_word_idx</span> <span class="o">=</span> <span class="n">word_idx_list</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">num_times_seen</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">word_idx_list</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+      <span class="k">if</span> <span class="n">word_ref</span> <span class="ow">in</span> <span class="n">word_set</span><span class="p">:</span>
+        <span class="n">words_correct</span> <span class="o">+=</span> <span class="mi">1</span>
+      <span class="n">words_total</span> <span class="o">+=</span> <span class="mi">1</span>
+  <span class="nb">print</span><span class="p">(</span><span class="n">words_total</span><span class="p">)</span>
+  <span class="nb">print</span><span class="p">(</span><span class="n">words_correct</span><span class="p">)</span>
+  <span class="n">langpair_to_google_heuristic_accuracy</span><span class="p">[</span><span class="n">langpair_arg</span><span class="p">]</span> <span class="o">=</span> <span class="n">words_correct</span> <span class="o">/</span> <span class="n">words_total</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+<div class="jp-Cell-outputWrapper">
+
+
+<div class="jp-OutputArea jp-Cell-outputArea">
+
+<div class="jp-OutputArea-child">
+
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+
+
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+<pre>ende
+106285
+48058
+enes
+132783
+67590
+enfr
+190712
+96256
+enit
+138906
+72879
+enja
+242645
+129649
+enko
+91416
+29276
+enpt
+59518
+33251
+enzh
+177114
+122970
+enzt
+182927
+99727
+</pre>
+</div>
+</div>
+
+</div>
+
+</div>
+
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[44]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># developing algorithm for alignment here</span>
+
+<span class="c1"># noexport</span>
+
+<span class="n">langpair_to_google_heuristic_v2_accuracy</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">langpair_arg</span> <span class="ow">in</span> <span class="n">langpair_list</span><span class="p">:</span>
+  <span class="n">src_lang</span> <span class="o">=</span> <span class="n">langpair_arg</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+  <span class="n">trg_lang</span> <span class="o">=</span> <span class="n">langpair_arg</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+  <span class="n">words_correct</span> <span class="o">=</span> <span class="mi">0</span>
+  <span class="n">words_total</span> <span class="o">=</span> <span class="mi">0</span>
+  <span class="nb">print</span><span class="p">(</span><span class="n">langpair_arg</span><span class="p">)</span>
+  <span class="c1">#cache_db = langpair_to_cache_db[langpair_arg]</span>
+  <span class="c1">#translation_cache_db = langpair_to_translation_db[langpair_arg]</span>
+  <span class="n">translation_dict</span> <span class="o">=</span> <span class="n">msgpack</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;translation_dict/&#39;</span> <span class="o">+</span> <span class="n">langpair_arg</span> <span class="o">+</span> <span class="s1">&#39;.msgpack&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">),</span> <span class="n">raw</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">strict_map_key</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+  <span class="n">output_list</span> <span class="o">=</span> <span class="n">msgpack</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;simulation_output_list/&#39;</span> <span class="o">+</span> <span class="n">langpair_arg</span> <span class="o">+</span> <span class="s1">&#39;.msgpack&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">),</span> <span class="n">raw</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">strict_map_key</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+  <span class="k">for</span> <span class="n">src_sentence</span><span class="p">,</span><span class="n">trg_sentence</span><span class="p">,</span><span class="n">output</span><span class="p">,</span><span class="n">google_translate</span> <span class="ow">in</span> <span class="n">output_list</span><span class="p">:</span>
+    <span class="c1">#key = msgpack.dumps(src_sentence)</span>
+    <span class="n">segmented_google_translate</span> <span class="o">=</span> <span class="n">segment_sentence</span><span class="p">(</span><span class="n">google_translate</span><span class="p">,</span> <span class="n">trg_lang</span><span class="p">)</span>
+    <span class="n">word_list</span> <span class="o">=</span> <span class="n">segmented_google_translate</span><span class="o">.</span><span class="n">tokens</span>
+    <span class="n">delimiter_list</span> <span class="o">=</span> <span class="n">segmented_google_translate</span><span class="o">.</span><span class="n">delimiters</span>
+    <span class="c1">#cached_result = translation_cache_db.get(key)</span>
+    <span class="c1">#word_set = set(word_list)</span>
+    <span class="n">word_to_idx_list</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span><span class="n">word</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">word_list</span><span class="p">):</span>
+      <span class="k">if</span> <span class="n">word</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">word_to_idx_list</span><span class="p">:</span>
+        <span class="n">word_to_idx_list</span><span class="p">[</span><span class="n">word</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+      <span class="n">word_to_idx_list</span><span class="p">[</span><span class="n">word</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+    <span class="n">predicted_word_idx</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">prev_ref_word_idx</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">word_to_times_seen</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">word_info</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
+      <span class="n">word_ref</span> <span class="o">=</span> <span class="n">word_info</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+      <span class="n">predicted_word_idx</span> <span class="o">=</span> <span class="n">prev_ref_word_idx</span> <span class="o">+</span> <span class="mi">1</span>
+      <span class="n">predicted_word</span> <span class="o">=</span> <span class="kc">None</span>
+      <span class="k">if</span> <span class="n">predicted_word_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">word_list</span><span class="p">):</span>
+        <span class="n">predicted_word</span> <span class="o">=</span> <span class="n">word_list</span><span class="p">[</span><span class="n">predicted_word_idx</span><span class="p">]</span>
+      <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">word_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">predicted_word</span> <span class="o">=</span> <span class="n">word_list</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">word_list</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+      <span class="k">if</span> <span class="n">predicted_word</span> <span class="o">==</span> <span class="n">word_ref</span><span class="p">:</span>
+        <span class="n">words_correct</span> <span class="o">+=</span> <span class="mi">1</span>
+      <span class="k">if</span> <span class="n">word_ref</span> <span class="ow">in</span> <span class="n">word_to_idx_list</span><span class="p">:</span>
+        <span class="n">num_times_seen</span> <span class="o">=</span> <span class="n">word_to_times_seen</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">word_ref</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">word_to_times_seen</span><span class="p">[</span><span class="n">word_ref</span><span class="p">]</span> <span class="o">=</span> <span class="n">num_times_seen</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">word_idx_list</span> <span class="o">=</span> <span class="n">word_to_idx_list</span><span class="p">[</span><span class="n">word_ref</span><span class="p">]</span>
+        <span class="n">prev_ref_word_idx</span> <span class="o">=</span> <span class="n">word_idx_list</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">num_times_seen</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">word_idx_list</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">prev_ref_word_idx</span> <span class="o">+=</span> <span class="mi">1</span>
+      <span class="k">if</span> <span class="n">word_ref</span> <span class="ow">in</span> <span class="n">word_set</span><span class="p">:</span>
+        <span class="n">words_correct</span> <span class="o">+=</span> <span class="mi">1</span>
+      <span class="n">words_total</span> <span class="o">+=</span> <span class="mi">1</span>
+  <span class="nb">print</span><span class="p">(</span><span class="n">words_total</span><span class="p">)</span>
+  <span class="nb">print</span><span class="p">(</span><span class="n">words_correct</span><span class="p">)</span>
+  <span class="n">langpair_to_google_heuristic_v2_accuracy</span><span class="p">[</span><span class="n">langpair_arg</span><span class="p">]</span> <span class="o">=</span> <span class="n">words_correct</span> <span class="o">/</span> <span class="n">words_total</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+<div class="jp-Cell-outputWrapper">
+
+
+<div class="jp-OutputArea jp-Cell-outputArea">
+
+<div class="jp-OutputArea-child">
+
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+
+
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+<pre>ende
+106285
+52615
+enes
+132783
+73240
+enfr
+190712
+103062
+enit
+138906
+78299
+enja
+242645
+136244
+enko
+91416
+33512
+enpt
+59518
+35649
+enzh
+177114
+130681
+enzt
+182927
+113636
+</pre>
+</div>
+</div>
+
+</div>
+
+</div>
+
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[60]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># developing algorithm for alignment here</span>
+
+<span class="c1"># noexport</span>
+
+<span class="n">langpair_to_google_heuristic_v3_accuracy</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">langpair_arg</span> <span class="ow">in</span> <span class="n">langpair_list</span><span class="p">:</span>
+  <span class="n">src_lang</span> <span class="o">=</span> <span class="n">langpair_arg</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+  <span class="n">trg_lang</span> <span class="o">=</span> <span class="n">langpair_arg</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+  <span class="n">words_correct</span> <span class="o">=</span> <span class="mi">0</span>
+  <span class="n">words_total</span> <span class="o">=</span> <span class="mi">0</span>
+  <span class="nb">print</span><span class="p">(</span><span class="n">langpair_arg</span><span class="p">)</span>
+  <span class="c1">#cache_db = langpair_to_cache_db[langpair_arg]</span>
+  <span class="c1">#translation_cache_db = langpair_to_translation_db[langpair_arg]</span>
+  <span class="n">translation_dict</span> <span class="o">=</span> <span class="n">msgpack</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;translation_dict/&#39;</span> <span class="o">+</span> <span class="n">langpair_arg</span> <span class="o">+</span> <span class="s1">&#39;.msgpack&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">),</span> <span class="n">raw</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">strict_map_key</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+  <span class="n">output_list</span> <span class="o">=</span> <span class="n">msgpack</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;simulation_output_list/&#39;</span> <span class="o">+</span> <span class="n">langpair_arg</span> <span class="o">+</span> <span class="s1">&#39;.msgpack&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">),</span> <span class="n">raw</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">strict_map_key</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+  <span class="k">for</span> <span class="n">src_sentence</span><span class="p">,</span><span class="n">trg_sentence</span><span class="p">,</span><span class="n">output</span><span class="p">,</span><span class="n">google_translate</span> <span class="ow">in</span> <span class="n">output_list</span><span class="p">:</span>
+    <span class="c1">#key = msgpack.dumps(src_sentence)</span>
+    <span class="n">segmented_google_translate</span> <span class="o">=</span> <span class="n">segment_sentence</span><span class="p">(</span><span class="n">google_translate</span><span class="p">,</span> <span class="n">trg_lang</span><span class="p">)</span>
+    <span class="n">word_list</span> <span class="o">=</span> <span class="n">segmented_google_translate</span><span class="o">.</span><span class="n">tokens</span>
+    <span class="n">delimiter_list</span> <span class="o">=</span> <span class="n">segmented_google_translate</span><span class="o">.</span><span class="n">delimiters</span>
+    <span class="c1">#cached_result = translation_cache_db.get(key)</span>
+    <span class="c1">#word_set = set(word_list)</span>
+    <span class="n">word_to_idx_list</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span><span class="n">word</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">word_list</span><span class="p">):</span>
+      <span class="k">if</span> <span class="n">word</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">word_to_idx_list</span><span class="p">:</span>
+        <span class="n">word_to_idx_list</span><span class="p">[</span><span class="n">word</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+      <span class="n">word_to_idx_list</span><span class="p">[</span><span class="n">word</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+    <span class="n">predicted_word_idx</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">prev_ref_word_idx</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">word_to_times_seen</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">word_info</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
+      <span class="n">word_ref</span> <span class="o">=</span> <span class="n">word_info</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+      <span class="n">predicted_word_idx</span> <span class="o">=</span> <span class="n">prev_ref_word_idx</span> <span class="o">+</span> <span class="mi">1</span>
+      <span class="n">predicted_word</span> <span class="o">=</span> <span class="kc">None</span>
+      <span class="k">if</span> <span class="n">predicted_word_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">word_list</span><span class="p">):</span>
+        <span class="n">predicted_word</span> <span class="o">=</span> <span class="n">word_list</span><span class="p">[</span><span class="n">predicted_word_idx</span><span class="p">]</span>
+      <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">word_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">predicted_word</span> <span class="o">=</span> <span class="n">word_list</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">word_list</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+      <span class="k">if</span> <span class="n">predicted_word</span> <span class="o">==</span> <span class="n">word_ref</span><span class="p">:</span>
+        <span class="n">words_correct</span> <span class="o">+=</span> <span class="mi">1</span>
+      <span class="k">if</span> <span class="n">word_ref</span> <span class="ow">in</span> <span class="n">word_to_idx_list</span><span class="p">:</span>
+        <span class="n">num_times_seen</span> <span class="o">=</span> <span class="n">word_to_times_seen</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">word_ref</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">word_to_times_seen</span><span class="p">[</span><span class="n">word_ref</span><span class="p">]</span> <span class="o">=</span> <span class="n">num_times_seen</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">word_idx_list</span> <span class="o">=</span> <span class="n">word_to_idx_list</span><span class="p">[</span><span class="n">word_ref</span><span class="p">]</span>
+        <span class="n">prev_ref_word_idx</span> <span class="o">=</span> <span class="n">word_idx_list</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">num_times_seen</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">word_idx_list</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">best_lcs_ratio</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">best_lcs_words</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span><span class="n">word</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">word_to_idx_list</span><span class="p">):</span>
+          <span class="n">lcs_len</span> <span class="o">=</span> <span class="n">lcs</span><span class="p">(</span><span class="n">word</span><span class="p">,</span> <span class="n">word_ref</span><span class="p">)</span>
+          <span class="k">if</span> <span class="n">lcs_len</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">continue</span>
+          <span class="n">lcs_ratio</span> <span class="o">=</span> <span class="n">lcs_len</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">word</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">word_ref</span><span class="p">))</span>
+          <span class="k">if</span> <span class="n">lcs_ratio</span> <span class="o">&gt;</span> <span class="n">best_lcs_ratio</span><span class="p">:</span>
+            <span class="n">best_lcs_ratio</span> <span class="o">=</span> <span class="n">lcs_ratio</span>
+            <span class="n">best_lcs_words</span> <span class="o">=</span> <span class="p">[</span><span class="n">word</span><span class="p">]</span>
+          <span class="k">elif</span> <span class="n">lcs_ratio</span> <span class="o">==</span> <span class="n">best_lcs_ratio</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">word</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">best_lcs_words</span><span class="p">:</span>
+              <span class="n">best_lcs_words</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">word</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">best_lcs_ratio</span> <span class="o">&gt;=</span> <span class="mf">0.5</span><span class="p">:</span>
+          <span class="k">for</span> <span class="n">word_matched</span> <span class="ow">in</span> <span class="n">best_lcs_words</span><span class="p">:</span>
+            <span class="n">num_times_seen</span> <span class="o">=</span> <span class="n">word_to_times_seen</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">word_matched</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">word_idx_list</span> <span class="o">=</span> <span class="n">word_to_idx_list</span><span class="p">[</span><span class="n">word_matched</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">num_times_seen</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">word_idx_list</span><span class="p">):</span>
+              <span class="c1"># already seen this word enough times</span>
+              <span class="k">continue</span>
+            <span class="n">word_to_times_seen</span><span class="p">[</span><span class="n">word_matched</span><span class="p">]</span> <span class="o">=</span> <span class="n">num_times_seen</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">prev_ref_word_idx</span> <span class="o">=</span> <span class="n">word_idx_list</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">num_times_seen</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">word_idx_list</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="n">prev_ref_word_idx</span> <span class="o">+=</span> <span class="mi">1</span>
+      <span class="k">if</span> <span class="n">word_ref</span> <span class="ow">in</span> <span class="n">word_set</span><span class="p">:</span>
+        <span class="n">words_correct</span> <span class="o">+=</span> <span class="mi">1</span>
+      <span class="n">words_total</span> <span class="o">+=</span> <span class="mi">1</span>
+  <span class="nb">print</span><span class="p">(</span><span class="n">words_total</span><span class="p">)</span>
+  <span class="nb">print</span><span class="p">(</span><span class="n">words_correct</span><span class="p">)</span>
+  <span class="n">langpair_to_google_heuristic_v3_accuracy</span><span class="p">[</span><span class="n">langpair_arg</span><span class="p">]</span> <span class="o">=</span> <span class="n">words_correct</span> <span class="o">/</span> <span class="n">words_total</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+<div class="jp-Cell-outputWrapper">
+
+
+<div class="jp-OutputArea jp-Cell-outputArea">
+
+<div class="jp-OutputArea-child">
+
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+
+
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+<pre>ende
+106285
+54017
+enes
+132783
+74214
+enfr
+190712
+104833
+enit
+138906
+79345
+enja
+242645
+138588
+enko
+91416
+34747
+enpt
+59518
+36254
+enzh
+177114
+131474
+enzt
+182927
+115408
+</pre>
+</div>
+</div>
+
+</div>
+
+</div>
+
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[55]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">lcs</span><span class="p">(</span><span class="s1">&#39;abc&#39;</span><span class="p">,</span> <span class="s1">&#39;ab&#39;</span><span class="p">)</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+<div class="jp-Cell-outputWrapper">
+
+
+<div class="jp-OutputArea jp-Cell-outputArea">
+
+<div class="jp-OutputArea-child">
+
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[55]:</div>
+
+
+
+
+<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain">
+<pre>2</pre>
+</div>
+
+</div>
+
+</div>
+
 </div>
 
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
@@ -18749,7 +19519,7 @@ median for frac_correct_predictions_list 0.5
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[21]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[31]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># noexport</span>
@@ -18799,9 +19569,188 @@ median for frac_correct_predictions_list 0.5
 
 
 <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output " data-mime-type="text/html">
-<div>                            <div id="ca1b4e13-0081-492c-8bc6-ad7e05266e98" class="plotly-graph-div" style="height:525px; width:100%;"></div>            <script type="text/javascript">                require(["plotly"], function(Plotly) {                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("ca1b4e13-0081-492c-8bc6-ad7e05266e98")) {                    Plotly.newPlot(                        "ca1b4e13-0081-492c-8bc6-ad7e05266e98",                        [{"name": "prefix-constrained MT", "type": "bar", "x": ["ende", "enes", "enfr", "enit", "enja", "enko", "enpt", "enzh", "enzt"], "y": [0.6044597073905067, 0.6861345202322586, 0.6824583665422207, 0.6756007659856306, 0.5356384842053206, 0.5748556051457075, 0.7112302160690883, 0.590495387151778, 0.5642852066671404]}, {"name": "prefix-constrained MT with oracle", "type": "bar", "x": ["ende", "enes", "enfr", "enit", "enja", "enko", "enpt", "enzh", "enzt"], "y": [0.6347744272474949, 0.7300859296747324, 0.7208618230630479, 0.7121002692468288, 0.6128747759071895, 0.5985276100463813, 0.752427836956887, 0.6385887055794573, 0.6083300988919077]}, {"name": "fixed MT with oracle", "type": "bar", "x": ["ende", "enes", "enfr", "enit", "enja", "enko", "enpt", "enzh", "enzt"], "y": [0.5545373288798984, 0.6831371485807671, 0.6465246025420529, 0.6487336760111154, 0.5634898720352779, 0.5361534085936817, 0.7005107698511375, 0.6442347866345969, 0.6186456892640233]}, {"name": "google translate with oracle", "type": "bar", "x": ["ende", "enes", "enfr", "enit", "enja", "enko", "enpt", "enzh", "enzt"], "y": [0.6262313590817142, 0.7147902969506639, 0.6903393598724779, 0.7041668466444934, 0.7189185847637495, 0.5062789883608996, 0.7422796464934978, 0.7734622898246327, 0.658399252160698]}],                        {"barmode": "group", "template": {"data": {"bar": [{"error_x": {"color": "#2a3f5f"}, "error_y": {"color": "#2a3f5f"}, "marker": {"line": {"color": "#E5ECF6", "width": 0.5}}, "type": "bar"}], "barpolar": [{"marker": {"line": {"color": "#E5ECF6", "width": 0.5}}, "type": "barpolar"}], "carpet": [{"aaxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "baxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "type": "carpet"}], "choropleth": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "type": "choropleth"}], "contour": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "type": "contour"}], "contourcarpet": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "type": "contourcarpet"}], "heatmap": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "type": "heatmap"}], "heatmapgl": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "type": "heatmapgl"}], "histogram": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "histogram"}], "histogram2d": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "type": "histogram2d"}], "histogram2dcontour": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "type": "histogram2dcontour"}], "mesh3d": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "type": "mesh3d"}], "parcoords": [{"line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "parcoords"}], "pie": [{"automargin": true, "type": "pie"}], "scatter": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scatter"}], "scatter3d": [{"line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scatter3d"}], "scattercarpet": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scattercarpet"}], "scattergeo": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scattergeo"}], "scattergl": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scattergl"}], "scattermapbox": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scattermapbox"}], "scatterpolar": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scatterpolar"}], "scatterpolargl": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scatterpolargl"}], "scatterternary": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scatterternary"}], "surface": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "type": "surface"}], "table": [{"cells": {"fill": {"color": "#EBF0F8"}, "line": {"color": "white"}}, "header": {"fill": {"color": "#C8D4E3"}, "line": {"color": "white"}}, "type": "table"}]}, "layout": {"annotationdefaults": {"arrowcolor": "#2a3f5f", "arrowhead": 0, "arrowwidth": 1}, "autotypenumbers": "strict", "coloraxis": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "colorscale": {"diverging": [[0, "#8e0152"], [0.1, "#c51b7d"], [0.2, "#de77ae"], [0.3, "#f1b6da"], [0.4, "#fde0ef"], [0.5, "#f7f7f7"], [0.6, "#e6f5d0"], [0.7, "#b8e186"], [0.8, "#7fbc41"], [0.9, "#4d9221"], [1, "#276419"]], "sequential": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "sequentialminus": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}, "colorway": ["#636efa", "#EF553B", "#00cc96", "#ab63fa", "#FFA15A", "#19d3f3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52"], "font": {"color": "#2a3f5f"}, "geo": {"bgcolor": "white", "lakecolor": "white", "landcolor": "#E5ECF6", "showlakes": true, "showland": true, "subunitcolor": "white"}, "hoverlabel": {"align": "left"}, "hovermode": "closest", "mapbox": {"style": "light"}, "paper_bgcolor": "white", "plot_bgcolor": "#E5ECF6", "polar": {"angularaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "bgcolor": "#E5ECF6", "radialaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "scene": {"xaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "gridwidth": 2, "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white"}, "yaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "gridwidth": 2, "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white"}, "zaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "gridwidth": 2, "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white"}}, "shapedefaults": {"line": {"color": "#2a3f5f"}}, "ternary": {"aaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "baxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "bgcolor": "#E5ECF6", "caxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "title": {"x": 0.05}, "xaxis": {"automargin": true, "gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "zerolinewidth": 2}, "yaxis": {"automargin": true, "gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "zerolinewidth": 2}}}},                        {"responsive": true}                    ).then(function(){
+<div>                            <div id="761a44ff-0935-46a2-8ce2-d0eea4d63a6a" class="plotly-graph-div" style="height:525px; width:100%;"></div>            <script type="text/javascript">                require(["plotly"], function(Plotly) {                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("761a44ff-0935-46a2-8ce2-d0eea4d63a6a")) {                    Plotly.newPlot(                        "761a44ff-0935-46a2-8ce2-d0eea4d63a6a",                        [{"name": "prefix-constrained MT", "type": "bar", "x": ["ende", "enes", "enfr", "enit", "enja", "enko", "enpt", "enzh", "enzt"], "y": [0.6044597073905067, 0.6861345202322586, 0.6824583665422207, 0.6756007659856306, 0.5356384842053206, 0.5748556051457075, 0.7112302160690883, 0.590495387151778, 0.5642852066671404]}, {"name": "prefix-constrained MT with oracle", "type": "bar", "x": ["ende", "enes", "enfr", "enit", "enja", "enko", "enpt", "enzh", "enzt"], "y": [0.6347744272474949, 0.7300859296747324, 0.7208618230630479, 0.7121002692468288, 0.6128747759071895, 0.5985276100463813, 0.752427836956887, 0.6385887055794573, 0.6083300988919077]}, {"name": "fixed MT with oracle", "type": "bar", "x": ["ende", "enes", "enfr", "enit", "enja", "enko", "enpt", "enzh", "enzt"], "y": [0.5545373288798984, 0.6831371485807671, 0.6465246025420529, 0.6487336760111154, 0.5634898720352779, 0.5361534085936817, 0.7005107698511375, 0.6442347866345969, 0.6186456892640233]}, {"name": "google translate with oracle", "type": "bar", "x": ["ende", "enes", "enfr", "enit", "enja", "enko", "enpt", "enzh", "enzt"], "y": [0.6262313590817142, 0.7147902969506639, 0.6903393598724779, 0.7041668466444934, 0.7189185847637495, 0.5062789883608996, 0.7422796464934978, 0.7734622898246327, 0.658399252160698]}],                        {"barmode": "group", "template": {"data": {"bar": [{"error_x": {"color": "#2a3f5f"}, "error_y": {"color": "#2a3f5f"}, "marker": {"line": {"color": "#E5ECF6", "width": 0.5}}, "type": "bar"}], "barpolar": [{"marker": {"line": {"color": "#E5ECF6", "width": 0.5}}, "type": "barpolar"}], "carpet": [{"aaxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "baxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "type": "carpet"}], "choropleth": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "type": "choropleth"}], "contour": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "type": "contour"}], "contourcarpet": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "type": "contourcarpet"}], "heatmap": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "type": "heatmap"}], "heatmapgl": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "type": "heatmapgl"}], "histogram": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "histogram"}], "histogram2d": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "type": "histogram2d"}], "histogram2dcontour": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "type": "histogram2dcontour"}], "mesh3d": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "type": "mesh3d"}], "parcoords": [{"line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "parcoords"}], "pie": [{"automargin": true, "type": "pie"}], "scatter": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scatter"}], "scatter3d": [{"line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scatter3d"}], "scattercarpet": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scattercarpet"}], "scattergeo": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scattergeo"}], "scattergl": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scattergl"}], "scattermapbox": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scattermapbox"}], "scatterpolar": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scatterpolar"}], "scatterpolargl": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scatterpolargl"}], "scatterternary": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scatterternary"}], "surface": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "type": "surface"}], "table": [{"cells": {"fill": {"color": "#EBF0F8"}, "line": {"color": "white"}}, "header": {"fill": {"color": "#C8D4E3"}, "line": {"color": "white"}}, "type": "table"}]}, "layout": {"annotationdefaults": {"arrowcolor": "#2a3f5f", "arrowhead": 0, "arrowwidth": 1}, "autotypenumbers": "strict", "coloraxis": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "colorscale": {"diverging": [[0, "#8e0152"], [0.1, "#c51b7d"], [0.2, "#de77ae"], [0.3, "#f1b6da"], [0.4, "#fde0ef"], [0.5, "#f7f7f7"], [0.6, "#e6f5d0"], [0.7, "#b8e186"], [0.8, "#7fbc41"], [0.9, "#4d9221"], [1, "#276419"]], "sequential": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "sequentialminus": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}, "colorway": ["#636efa", "#EF553B", "#00cc96", "#ab63fa", "#FFA15A", "#19d3f3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52"], "font": {"color": "#2a3f5f"}, "geo": {"bgcolor": "white", "lakecolor": "white", "landcolor": "#E5ECF6", "showlakes": true, "showland": true, "subunitcolor": "white"}, "hoverlabel": {"align": "left"}, "hovermode": "closest", "mapbox": {"style": "light"}, "paper_bgcolor": "white", "plot_bgcolor": "#E5ECF6", "polar": {"angularaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "bgcolor": "#E5ECF6", "radialaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "scene": {"xaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "gridwidth": 2, "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white"}, "yaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "gridwidth": 2, "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white"}, "zaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "gridwidth": 2, "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white"}}, "shapedefaults": {"line": {"color": "#2a3f5f"}}, "ternary": {"aaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "baxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "bgcolor": "#E5ECF6", "caxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "title": {"x": 0.05}, "xaxis": {"automargin": true, "gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "zerolinewidth": 2}, "yaxis": {"automargin": true, "gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "zerolinewidth": 2}}}},                        {"responsive": true}                    ).then(function(){
                             
-var gd = document.getElementById('ca1b4e13-0081-492c-8bc6-ad7e05266e98');
+var gd = document.getElementById('761a44ff-0935-46a2-8ce2-d0eea4d63a6a');
+var x = new MutationObserver(function (mutations, observer) {{
+        var display = window.getComputedStyle(gd).display;
+        if (!display || display === 'none') {{
+            console.log([gd, 'removed!']);
+            Plotly.purge(gd);
+            observer.disconnect();
+        }}
+}});
+
+// Listen for the removal of the full notebook cells
+var notebookContainer = gd.closest('#notebook-container');
+if (notebookContainer) {{
+    x.observe(notebookContainer, {childList: true});
+}}
+
+// Listen for the clearing of the current output cell
+var outputEl = gd.closest('.output');
+if (outputEl) {{
+    x.observe(outputEl, {childList: true});
+}}
+
+                        })                };                });            </script>        </div>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[64]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># noexport</span>
+
+<span class="kn">import</span> <span class="nn">plotly.graph_objects</span> <span class="k">as</span> <span class="nn">go</span>
+
+<span class="n">fig</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">[</span>
+    <span class="c1">#go.Bar(name=&#39;no MT, 5 src syn for each word&#39;, x=langpair_list, y=[langpair_to_num_src_trg_synonyms_nomt_to_accuracy[lang][(5, 0)] for lang in langpair_list]),</span>
+    <span class="n">go</span><span class="o">.</span><span class="n">Bar</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;prefix-constrained MT&#39;</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">langpair_list</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="n">lang_to_baseline_accuracy</span><span class="p">[</span><span class="n">lang</span><span class="p">]</span> <span class="k">for</span> <span class="n">lang</span> <span class="ow">in</span> <span class="n">langpair_list</span><span class="p">]),</span>
+    <span class="c1">#go.Bar(name=&#39;prefix-constrained MT, plus 5 src syn for each word&#39;, x=langpair_list, y=[langpair_to_num_src_trg_synonyms_prefix_nextword_to_accuracy[lang][(5,0)] for lang in langpair_list]),</span>
+    <span class="c1">#go.Bar(name=&#39;prefix-constrained MT, plus 5 trg syn for *next* word&#39;, x=langpair_list, y=[langpair_to_num_src_trg_synonyms_prefix_nextword_to_accuracy[lang][(0,5)] for lang in langpair_list]),</span>
+    <span class="c1">#go.Bar(name=&#39;prefix-constrained MT, plus 5 src syn for each word + 5 trg syn for each word&#39;, x=langpair_list, y=[langpair_to_num_src_trg_synonyms_prefix_oracle_allsyn_to_accuracy[lang][(5,5)] for lang in langpair_list]),</span>
+    <span class="c1">#go.Bar(name=&#39;prefix-constrained MT with oracle&#39;, x=langpair_list, y=[lang_to_baseline_accuracy_with_oracle[lang] for lang in langpair_list]),</span>
+    <span class="c1">#go.Bar(name=&#39;prefix-constrained MT with oracle, plus 5 src syn for each word&#39;, x=langpair_list, y=[langpair_to_num_src_trg_synonyms_prefix_oracle_to_accuracy[lang][(5,0)] for lang in langpair_list]),</span>
+    <span class="c1">#go.Bar(name=&#39;prefix-constrained MT with oracle, plus 5 trg syn for *next* word&#39;, x=langpair_list, y=[langpair_to_num_src_trg_synonyms_prefix_oracle_to_accuracy[lang][(0,5)] for lang in langpair_list]),</span>
+    <span class="c1">#go.Bar(name=&#39;prefix-constrained MT with oracle, plus 5 src syn for each word + 5 trg syn for each word&#39;, x=langpair_list, y=[langpair_to_num_src_trg_synonyms_prefix_oracle_allsyn_to_accuracy[lang][(5,5)] for lang in langpair_list]),</span>
+    <span class="n">go</span><span class="o">.</span><span class="n">Bar</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;fixed MT with heuristic v3&#39;</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">langpair_list</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="n">langpair_to_lilt_fixedmt_heuristic_v3_accuracy</span><span class="p">[</span><span class="n">lang</span><span class="p">]</span> <span class="k">for</span> <span class="n">lang</span> <span class="ow">in</span> <span class="n">langpair_list</span><span class="p">]),</span>
+    <span class="c1">#go.Bar(name=&#39;fixed MT with oracle&#39;, x=langpair_list, y=[langpair_to_oracle_accuracy[lang] for lang in langpair_list]),</span>
+    <span class="c1">#go.Bar(name=&#39;fixed MT with oracle, plus 5 src syn for each word&#39;, x=langpair_list, y=[langpair_to_num_src_trg_synonyms_to_accuracy[lang][(5,0)] for lang in langpair_list]),</span>
+    <span class="c1">#go.Bar(name=&#39;fixed MT with oracle, plus 5 trg syn for each word&#39;, x=langpair_list, y=[langpair_to_num_src_trg_synonyms_to_accuracy[lang][(0,5)] for lang in langpair_list]),</span>
+    <span class="c1">#go.Bar(name=&#39;fixed MT with oracle, plus 5 src syn + 5 trg syn for each word&#39;, x=langpair_list, y=[langpair_to_num_src_trg_synonyms_to_accuracy[lang][(5,5)] for lang in langpair_list]),</span>
+    <span class="c1">#go.Bar(name=&#39;google translate with oracle&#39;, x=langpair_list, y=[lang_to_google_translate_accuracy_with_oracle[lang] for lang in langpair_list]),</span>
+    <span class="c1">#go.Bar(name=&#39;google translate with heuristic&#39;, x=langpair_list, y=[langpair_to_google_heuristic_accuracy[lang] for lang in langpair_list]),</span>
+    <span class="c1">#go.Bar(name=&#39;google translate with heuristic v2&#39;, x=langpair_list, y=[langpair_to_google_heuristic_v2_accuracy[lang] for lang in langpair_list]),</span>
+    <span class="c1">#go.Bar(name=&#39;google translate with heuristic v3&#39;, x=langpair_list, y=[langpair_to_google_heuristic_v3_accuracy[lang] for lang in langpair_list]),</span>
+    <span class="n">go</span><span class="o">.</span><span class="n">Bar</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;google translate with heuristic v3&#39;</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">langpair_list</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="n">langpair_to_google_heuristic_v3_accuracy</span><span class="p">[</span><span class="n">lang</span><span class="p">]</span> <span class="k">for</span> <span class="n">lang</span> <span class="ow">in</span> <span class="n">langpair_list</span><span class="p">]),</span>
+    <span class="c1">#go.Bar(name=&#39;google translate with oracle&#39;, x=langpair_list, y=[langpair_to_num_src_trg_synonyms_googtrans_to_accuracy[lang][(0,0)] for lang in langpair_list]),</span>
+    <span class="c1">#go.Bar(name=&#39;google translate with oracle, plus 5 src syn for each word&#39;, x=langpair_list, y=[langpair_to_num_src_trg_synonyms_googtrans_to_accuracy[lang][(5,0)] for lang in langpair_list]),</span>
+    <span class="c1">#go.Bar(name=&#39;google translate with oracle, plus 5 trg syn for each word&#39;, x=langpair_list, y=[langpair_to_num_src_trg_synonyms_googtrans_to_accuracy[lang][(0,5)] for lang in langpair_list]),</span>
+    <span class="c1">#go.Bar(name=&#39;google translate with oracle, plus 5 src syn + 5 trg syn for each word&#39;, x=langpair_list, y=[langpair_to_num_src_trg_synonyms_googtrans_to_accuracy[lang][(5,5)] for lang in langpair_list]),</span>
+<span class="p">])</span>
+<span class="c1"># Change the bar mode</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span><span class="n">barmode</span><span class="o">=</span><span class="s1">&#39;group&#39;</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+<div class="jp-Cell-outputWrapper">
+
+
+<div class="jp-OutputArea jp-Cell-outputArea">
+
+<div class="jp-OutputArea-child">
+
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+
+
+
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output " data-mime-type="text/html">
+<div>                            <div id="ad4c657e-83ab-4846-8f89-1ddfd88a60cf" class="plotly-graph-div" style="height:525px; width:100%;"></div>            <script type="text/javascript">                require(["plotly"], function(Plotly) {                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("ad4c657e-83ab-4846-8f89-1ddfd88a60cf")) {                    Plotly.newPlot(                        "ad4c657e-83ab-4846-8f89-1ddfd88a60cf",                        [{"name": "prefix-constrained MT", "type": "bar", "x": ["ende", "enes", "enfr", "enit", "enja", "enko", "enpt", "enzh", "enzt"], "y": [0.6044597073905067, 0.6861345202322586, 0.6824583665422207, 0.6756007659856306, 0.5356384842053206, 0.5748556051457075, 0.7112302160690883, 0.590495387151778, 0.5642852066671404]}, {"name": "fixed MT with heuristic v3", "type": "bar", "x": ["ende", "enes", "enfr", "enit", "enja", "enko", "enpt", "enzh", "enzt"], "y": [0.41983346662275955, 0.5237793994713179, 0.48752569319182854, 0.5041034944494838, 0.3981371963156051, 0.43181718736326247, 0.5549749655566383, 0.5758720372189663, 0.5693309352911271]}, {"name": "google translate with heuristic v3", "type": "bar", "x": ["ende", "enes", "enfr", "enit", "enja", "enko", "enpt", "enzh", "enzt"], "y": [0.5082278778755234, 0.5589119089040012, 0.5496927303997651, 0.5712136264812175, 0.5711553916215046, 0.3800975759166885, 0.6091266507611143, 0.7423128606434274, 0.6308964778299541]}],                        {"barmode": "group", "template": {"data": {"bar": [{"error_x": {"color": "#2a3f5f"}, "error_y": {"color": "#2a3f5f"}, "marker": {"line": {"color": "#E5ECF6", "width": 0.5}}, "type": "bar"}], "barpolar": [{"marker": {"line": {"color": "#E5ECF6", "width": 0.5}}, "type": "barpolar"}], "carpet": [{"aaxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "baxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "type": "carpet"}], "choropleth": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "type": "choropleth"}], "contour": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "type": "contour"}], "contourcarpet": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "type": "contourcarpet"}], "heatmap": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "type": "heatmap"}], "heatmapgl": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "type": "heatmapgl"}], "histogram": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "histogram"}], "histogram2d": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "type": "histogram2d"}], "histogram2dcontour": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "type": "histogram2dcontour"}], "mesh3d": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "type": "mesh3d"}], "parcoords": [{"line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "parcoords"}], "pie": [{"automargin": true, "type": "pie"}], "scatter": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scatter"}], "scatter3d": [{"line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scatter3d"}], "scattercarpet": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scattercarpet"}], "scattergeo": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scattergeo"}], "scattergl": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scattergl"}], "scattermapbox": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scattermapbox"}], "scatterpolar": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scatterpolar"}], "scatterpolargl": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scatterpolargl"}], "scatterternary": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scatterternary"}], "surface": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "type": "surface"}], "table": [{"cells": {"fill": {"color": "#EBF0F8"}, "line": {"color": "white"}}, "header": {"fill": {"color": "#C8D4E3"}, "line": {"color": "white"}}, "type": "table"}]}, "layout": {"annotationdefaults": {"arrowcolor": "#2a3f5f", "arrowhead": 0, "arrowwidth": 1}, "autotypenumbers": "strict", "coloraxis": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "colorscale": {"diverging": [[0, "#8e0152"], [0.1, "#c51b7d"], [0.2, "#de77ae"], [0.3, "#f1b6da"], [0.4, "#fde0ef"], [0.5, "#f7f7f7"], [0.6, "#e6f5d0"], [0.7, "#b8e186"], [0.8, "#7fbc41"], [0.9, "#4d9221"], [1, "#276419"]], "sequential": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "sequentialminus": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}, "colorway": ["#636efa", "#EF553B", "#00cc96", "#ab63fa", "#FFA15A", "#19d3f3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52"], "font": {"color": "#2a3f5f"}, "geo": {"bgcolor": "white", "lakecolor": "white", "landcolor": "#E5ECF6", "showlakes": true, "showland": true, "subunitcolor": "white"}, "hoverlabel": {"align": "left"}, "hovermode": "closest", "mapbox": {"style": "light"}, "paper_bgcolor": "white", "plot_bgcolor": "#E5ECF6", "polar": {"angularaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "bgcolor": "#E5ECF6", "radialaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "scene": {"xaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "gridwidth": 2, "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white"}, "yaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "gridwidth": 2, "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white"}, "zaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "gridwidth": 2, "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white"}}, "shapedefaults": {"line": {"color": "#2a3f5f"}}, "ternary": {"aaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "baxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "bgcolor": "#E5ECF6", "caxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "title": {"x": 0.05}, "xaxis": {"automargin": true, "gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "zerolinewidth": 2}, "yaxis": {"automargin": true, "gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "zerolinewidth": 2}}}},                        {"responsive": true}                    ).then(function(){
+                            
+var gd = document.getElementById('ad4c657e-83ab-4846-8f89-1ddfd88a60cf');
+var x = new MutationObserver(function (mutations, observer) {{
+        var display = window.getComputedStyle(gd).display;
+        if (!display || display === 'none') {{
+            console.log([gd, 'removed!']);
+            Plotly.purge(gd);
+            observer.disconnect();
+        }}
+}});
+
+// Listen for the removal of the full notebook cells
+var notebookContainer = gd.closest('#notebook-container');
+if (notebookContainer) {{
+    x.observe(notebookContainer, {childList: true});
+}}
+
+// Listen for the clearing of the current output cell
+var outputEl = gd.closest('.output');
+if (outputEl) {{
+    x.observe(outputEl, {childList: true});
+}}
+
+                        })                };                });            </script>        </div>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[65]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># noexport</span>
+
+<span class="kn">import</span> <span class="nn">plotly.graph_objects</span> <span class="k">as</span> <span class="nn">go</span>
+
+<span class="n">fig</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">[</span>
+    <span class="c1">#go.Bar(name=&#39;no MT, 5 src syn for each word&#39;, x=langpair_list, y=[langpair_to_num_src_trg_synonyms_nomt_to_accuracy[lang][(5, 0)] for lang in langpair_list]),</span>
+    <span class="n">go</span><span class="o">.</span><span class="n">Bar</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;prefix-constrained MT&#39;</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">langpair_list</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="n">lang_to_baseline_accuracy</span><span class="p">[</span><span class="n">lang</span><span class="p">]</span> <span class="k">for</span> <span class="n">lang</span> <span class="ow">in</span> <span class="n">langpair_list</span><span class="p">]),</span>
+    <span class="c1">#go.Bar(name=&#39;prefix-constrained MT, plus 5 src syn for each word&#39;, x=langpair_list, y=[langpair_to_num_src_trg_synonyms_prefix_nextword_to_accuracy[lang][(5,0)] for lang in langpair_list]),</span>
+    <span class="c1">#go.Bar(name=&#39;prefix-constrained MT, plus 5 trg syn for *next* word&#39;, x=langpair_list, y=[langpair_to_num_src_trg_synonyms_prefix_nextword_to_accuracy[lang][(0,5)] for lang in langpair_list]),</span>
+    <span class="c1">#go.Bar(name=&#39;prefix-constrained MT, plus 5 src syn for each word + 5 trg syn for each word&#39;, x=langpair_list, y=[langpair_to_num_src_trg_synonyms_prefix_oracle_allsyn_to_accuracy[lang][(5,5)] for lang in langpair_list]),</span>
+    <span class="n">go</span><span class="o">.</span><span class="n">Bar</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;prefix-constrained MT with oracle&#39;</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">langpair_list</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="n">lang_to_baseline_accuracy_with_oracle</span><span class="p">[</span><span class="n">lang</span><span class="p">]</span> <span class="k">for</span> <span class="n">lang</span> <span class="ow">in</span> <span class="n">langpair_list</span><span class="p">]),</span>
+    <span class="c1">#go.Bar(name=&#39;prefix-constrained MT with oracle, plus 5 src syn for each word&#39;, x=langpair_list, y=[langpair_to_num_src_trg_synonyms_prefix_oracle_to_accuracy[lang][(5,0)] for lang in langpair_list]),</span>
+    <span class="c1">#go.Bar(name=&#39;prefix-constrained MT with oracle, plus 5 trg syn for *next* word&#39;, x=langpair_list, y=[langpair_to_num_src_trg_synonyms_prefix_oracle_to_accuracy[lang][(0,5)] for lang in langpair_list]),</span>
+    <span class="c1">#go.Bar(name=&#39;prefix-constrained MT with oracle, plus 5 src syn for each word + 5 trg syn for each word&#39;, x=langpair_list, y=[langpair_to_num_src_trg_synonyms_prefix_oracle_allsyn_to_accuracy[lang][(5,5)] for lang in langpair_list]),</span>
+    <span class="n">go</span><span class="o">.</span><span class="n">Bar</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;fixed MT with heuristic v3&#39;</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">langpair_list</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="n">langpair_to_lilt_fixedmt_heuristic_v3_accuracy</span><span class="p">[</span><span class="n">lang</span><span class="p">]</span> <span class="k">for</span> <span class="n">lang</span> <span class="ow">in</span> <span class="n">langpair_list</span><span class="p">]),</span>
+    <span class="n">go</span><span class="o">.</span><span class="n">Bar</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;fixed MT with oracle&#39;</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">langpair_list</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="n">langpair_to_oracle_accuracy</span><span class="p">[</span><span class="n">lang</span><span class="p">]</span> <span class="k">for</span> <span class="n">lang</span> <span class="ow">in</span> <span class="n">langpair_list</span><span class="p">]),</span>
+    <span class="c1">#go.Bar(name=&#39;fixed MT with oracle, plus 5 src syn for each word&#39;, x=langpair_list, y=[langpair_to_num_src_trg_synonyms_to_accuracy[lang][(5,0)] for lang in langpair_list]),</span>
+    <span class="c1">#go.Bar(name=&#39;fixed MT with oracle, plus 5 trg syn for each word&#39;, x=langpair_list, y=[langpair_to_num_src_trg_synonyms_to_accuracy[lang][(0,5)] for lang in langpair_list]),</span>
+    <span class="c1">#go.Bar(name=&#39;fixed MT with oracle, plus 5 src syn + 5 trg syn for each word&#39;, x=langpair_list, y=[langpair_to_num_src_trg_synonyms_to_accuracy[lang][(5,5)] for lang in langpair_list]),</span>
+    <span class="c1">#go.Bar(name=&#39;google translate with oracle&#39;, x=langpair_list, y=[lang_to_google_translate_accuracy_with_oracle[lang] for lang in langpair_list]),</span>
+    <span class="n">go</span><span class="o">.</span><span class="n">Bar</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;google translate with heuristic v3&#39;</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">langpair_list</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="n">langpair_to_google_heuristic_v3_accuracy</span><span class="p">[</span><span class="n">lang</span><span class="p">]</span> <span class="k">for</span> <span class="n">lang</span> <span class="ow">in</span> <span class="n">langpair_list</span><span class="p">]),</span>
+    <span class="n">go</span><span class="o">.</span><span class="n">Bar</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;google translate with oracle&#39;</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">langpair_list</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="n">langpair_to_num_src_trg_synonyms_googtrans_to_accuracy</span><span class="p">[</span><span class="n">lang</span><span class="p">][(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)]</span> <span class="k">for</span> <span class="n">lang</span> <span class="ow">in</span> <span class="n">langpair_list</span><span class="p">]),</span>
+    <span class="c1">#go.Bar(name=&#39;google translate with oracle, plus 5 src syn for each word&#39;, x=langpair_list, y=[langpair_to_num_src_trg_synonyms_googtrans_to_accuracy[lang][(5,0)] for lang in langpair_list]),</span>
+    <span class="c1">#go.Bar(name=&#39;google translate with oracle, plus 5 trg syn for each word&#39;, x=langpair_list, y=[langpair_to_num_src_trg_synonyms_googtrans_to_accuracy[lang][(0,5)] for lang in langpair_list]),</span>
+    <span class="c1">#go.Bar(name=&#39;google translate with oracle, plus 5 src syn + 5 trg syn for each word&#39;, x=langpair_list, y=[langpair_to_num_src_trg_synonyms_googtrans_to_accuracy[lang][(5,5)] for lang in langpair_list]),</span>
+<span class="p">])</span>
+<span class="c1"># Change the bar mode</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span><span class="n">barmode</span><span class="o">=</span><span class="s1">&#39;group&#39;</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+<div class="jp-Cell-outputWrapper">
+
+
+<div class="jp-OutputArea jp-Cell-outputArea">
+
+<div class="jp-OutputArea-child">
+
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+
+
+
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output " data-mime-type="text/html">
+<div>                            <div id="720532d3-7120-4d08-8d50-c94dbe242fa7" class="plotly-graph-div" style="height:525px; width:100%;"></div>            <script type="text/javascript">                require(["plotly"], function(Plotly) {                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("720532d3-7120-4d08-8d50-c94dbe242fa7")) {                    Plotly.newPlot(                        "720532d3-7120-4d08-8d50-c94dbe242fa7",                        [{"name": "prefix-constrained MT", "type": "bar", "x": ["ende", "enes", "enfr", "enit", "enja", "enko", "enpt", "enzh", "enzt"], "y": [0.6044597073905067, 0.6861345202322586, 0.6824583665422207, 0.6756007659856306, 0.5356384842053206, 0.5748556051457075, 0.7112302160690883, 0.590495387151778, 0.5642852066671404]}, {"name": "prefix-constrained MT with oracle", "type": "bar", "x": ["ende", "enes", "enfr", "enit", "enja", "enko", "enpt", "enzh", "enzt"], "y": [0.6347744272474949, 0.7300859296747324, 0.7208618230630479, 0.7121002692468288, 0.6128747759071895, 0.5985276100463813, 0.752427836956887, 0.6385887055794573, 0.6083300988919077]}, {"name": "fixed MT with heuristic v3", "type": "bar", "x": ["ende", "enes", "enfr", "enit", "enja", "enko", "enpt", "enzh", "enzt"], "y": [0.41983346662275955, 0.5237793994713179, 0.48752569319182854, 0.5041034944494838, 0.3981371963156051, 0.43181718736326247, 0.5549749655566383, 0.5758720372189663, 0.5693309352911271]}, {"name": "fixed MT with oracle", "type": "bar", "x": ["ende", "enes", "enfr", "enit", "enja", "enko", "enpt", "enzh", "enzt"], "y": [0.5545373288798984, 0.6831371485807671, 0.6465246025420529, 0.6487336760111154, 0.5634898720352779, 0.5361534085936817, 0.7005107698511375, 0.6442347866345969, 0.6186456892640233]}, {"name": "google translate with heuristic v3", "type": "bar", "x": ["ende", "enes", "enfr", "enit", "enja", "enko", "enpt", "enzh", "enzt"], "y": [0.5082278778755234, 0.5589119089040012, 0.5496927303997651, 0.5712136264812175, 0.5711553916215046, 0.3800975759166885, 0.6091266507611143, 0.7423128606434274, 0.6308964778299541]}, {"name": "google translate with oracle", "type": "bar", "x": ["ende", "enes", "enfr", "enit", "enja", "enko", "enpt", "enzh", "enzt"], "y": [0.6262313590817142, 0.7147902969506639, 0.6903393598724779, 0.7041668466444934, 0.7189185847637495, 0.5062789883608996, 0.7422796464934978, 0.7734622898246327, 0.658399252160698]}],                        {"barmode": "group", "template": {"data": {"bar": [{"error_x": {"color": "#2a3f5f"}, "error_y": {"color": "#2a3f5f"}, "marker": {"line": {"color": "#E5ECF6", "width": 0.5}}, "type": "bar"}], "barpolar": [{"marker": {"line": {"color": "#E5ECF6", "width": 0.5}}, "type": "barpolar"}], "carpet": [{"aaxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "baxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "type": "carpet"}], "choropleth": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "type": "choropleth"}], "contour": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "type": "contour"}], "contourcarpet": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "type": "contourcarpet"}], "heatmap": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "type": "heatmap"}], "heatmapgl": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "type": "heatmapgl"}], "histogram": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "histogram"}], "histogram2d": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "type": "histogram2d"}], "histogram2dcontour": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "type": "histogram2dcontour"}], "mesh3d": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "type": "mesh3d"}], "parcoords": [{"line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "parcoords"}], "pie": [{"automargin": true, "type": "pie"}], "scatter": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scatter"}], "scatter3d": [{"line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scatter3d"}], "scattercarpet": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scattercarpet"}], "scattergeo": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scattergeo"}], "scattergl": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scattergl"}], "scattermapbox": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scattermapbox"}], "scatterpolar": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scatterpolar"}], "scatterpolargl": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scatterpolargl"}], "scatterternary": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scatterternary"}], "surface": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "type": "surface"}], "table": [{"cells": {"fill": {"color": "#EBF0F8"}, "line": {"color": "white"}}, "header": {"fill": {"color": "#C8D4E3"}, "line": {"color": "white"}}, "type": "table"}]}, "layout": {"annotationdefaults": {"arrowcolor": "#2a3f5f", "arrowhead": 0, "arrowwidth": 1}, "autotypenumbers": "strict", "coloraxis": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "colorscale": {"diverging": [[0, "#8e0152"], [0.1, "#c51b7d"], [0.2, "#de77ae"], [0.3, "#f1b6da"], [0.4, "#fde0ef"], [0.5, "#f7f7f7"], [0.6, "#e6f5d0"], [0.7, "#b8e186"], [0.8, "#7fbc41"], [0.9, "#4d9221"], [1, "#276419"]], "sequential": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "sequentialminus": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}, "colorway": ["#636efa", "#EF553B", "#00cc96", "#ab63fa", "#FFA15A", "#19d3f3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52"], "font": {"color": "#2a3f5f"}, "geo": {"bgcolor": "white", "lakecolor": "white", "landcolor": "#E5ECF6", "showlakes": true, "showland": true, "subunitcolor": "white"}, "hoverlabel": {"align": "left"}, "hovermode": "closest", "mapbox": {"style": "light"}, "paper_bgcolor": "white", "plot_bgcolor": "#E5ECF6", "polar": {"angularaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "bgcolor": "#E5ECF6", "radialaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "scene": {"xaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "gridwidth": 2, "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white"}, "yaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "gridwidth": 2, "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white"}, "zaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "gridwidth": 2, "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white"}}, "shapedefaults": {"line": {"color": "#2a3f5f"}}, "ternary": {"aaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "baxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "bgcolor": "#E5ECF6", "caxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "title": {"x": 0.05}, "xaxis": {"automargin": true, "gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "zerolinewidth": 2}, "yaxis": {"automargin": true, "gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "zerolinewidth": 2}}}},                        {"responsive": true}                    ).then(function(){
+                            
+var gd = document.getElementById('720532d3-7120-4d08-8d50-c94dbe242fa7');
 var x = new MutationObserver(function (mutations, observer) {{
         var display = window.getComputedStyle(gd).display;
         if (!display || display === 'none') {{
