@@ -1,38 +1,52 @@
 #!/usr/bin/env python
-# md5: 8e71009e71cfea378a4b77d244aee94a
+# md5: d21078c6aa45e19f9b07aa5e74487f0d
 #!/usr/bin/env python
 # coding: utf-8
 
 
 
-import translationService
-from core.vwconfig import ValidWordsConfig
-from core.valid_background_words import ValidBackgroundWords
-from core.valid_foreground_words import ValidForegroundWords
-from core.service import TranslationRequest
-from core.db import DbConnection
+import translation_service
+from translation_service import ValidBackgroundWords, ValidForegroundWords
+
+
+
+# from core.valid_background_words import ValidBackgroundWords
+# from core.valid_foreground_words import ValidForegroundWords
+
+
+
+from neural.core.service import TranslationRequest
+
+
+
+from neural.core.vwconfig import ValidWordsConfig
+
+#from core.service import TranslationRequest
+from neural.core.db import DbConnection
 
 #import yaml
 #import collections
 import time
-import utils.config
+import neural.utils.config
 from prometheus_client import Counter
-from core.timer import Timer
+from neural.core.timer import Timer
 
 from getsecret import getsecret
 
 #config = yaml.safe_load(open('../../config/generated/local/service.yaml', 'rt'))
-config = utils.config.load_config('../../config/generated/local/service.yaml')
+config = neural.utils.config.load_config('../config/generated/local/service.yaml')
 config['RDConfig']['pwd'] = getsecret('lilt_redis_password')
 
 
 
 import sys
 langpair_arg = sys.argv[1]
-#src_lang = 'en'
-#trg_lang = 'zh'
-src_lang = langpair_arg[:2] #'en'
-trg_lang = langpair_arg[2:] #'zh'
+if 'ipykernel_launcher.py' in sys.argv[0]:
+  src_lang = 'en'
+  trg_lang = 'zh'
+else:
+  src_lang = langpair_arg[:2] #'en'
+  trg_lang = langpair_arg[2:] #'zh'
 
 
 
@@ -47,13 +61,18 @@ connection = DbConnection(config)
 #connection = DbConnection(config={})
 debug = False
 
-valid_words_config = ValidWordsConfig(config)
-valid_background_words = ValidBackgroundWords(valid_words_config)
 #valid_background_words = ValidBackgroundWords(config=config)
-valid_foreground_words = ValidForegroundWords(config=config, db=connection)
 specific_language_pairs = {(src_lang, trg_lang)}
 #specific_language_pairs = set()
 #specific_language_pairs = None
+
+valid_words_config = ValidWordsConfig(config)
+valid_background_words = ValidBackgroundWords(valid_words_config)
+valid_foreground_words = ValidForegroundWords(config=config, db=connection)
+
+
+
+
 
 inserted_items_counter = Counter(name='background_cache_inserted_items_counter',
                                                       documentation='Insertions into the background cache',
@@ -64,8 +83,12 @@ popped_items_counter = Counter(name='background_cache_items_popped_counter',
                                                 documentation='Background cache pops',
                                                 labelnames=['languages', 'service_name'])
 
-service = translationService.TranslationService(
-  config,
+
+
+service = translation_service.TranslationService(
+  instance_id='',
+  conf=config,
+  review=False,
   db=connection,
   debug=debug,
   cache_items_counters=(inserted_items_counter, popped_items_counter),
@@ -82,7 +105,7 @@ timer = Timer()
 
 
 
-from ling.segmenter import get_segmenter
+from neural.ling.segmenter import get_segmenter
 
 src_segmenter = get_segmenter(src_lang)
 trg_segmenter = get_segmenter(trg_lang)
@@ -109,11 +132,14 @@ def translate(sentence, prefix=''):
     "autoSplit": True,
     #"timeThreshold": 0.001,
   })
-  response = service.process(translation_request=request, db_session=db_session, timer=timer, log_vals={})
+  response = service.process(request=request, db_session=db_session, timer=timer, log_vals={}, correlation_id='')
+  print(response)
   translation = response[0]['translation'][0]
   return translation['targetWords'], translation['targetDelimiters'] # translation['target'],
 
-#translate('hello world')
+
+
+translate('hello world')
 
 
 
