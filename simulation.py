@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-# md5: d21078c6aa45e19f9b07aa5e74487f0d
+# md5: 2f35e90419b4d853a7aa521863903c0d
 #!/usr/bin/env python
 # coding: utf-8
 
 
 
-import translation_service
-from translation_service import ValidBackgroundWords, ValidForegroundWords
+import neural.translation_service
+#from neural.translation_service import ValidBackgroundWords, ValidForegroundWords
 
 
 
@@ -34,7 +34,7 @@ from neural.core.timer import Timer
 from getsecret import getsecret
 
 #config = yaml.safe_load(open('../../config/generated/local/service.yaml', 'rt'))
-config = neural.utils.config.load_config('../config/generated/local/service.yaml')
+config = neural.utils.config.load_config('config/generated/local/service.yaml')
 config['RDConfig']['pwd'] = getsecret('lilt_redis_password')
 
 
@@ -67,8 +67,8 @@ specific_language_pairs = {(src_lang, trg_lang)}
 #specific_language_pairs = None
 
 valid_words_config = ValidWordsConfig(config)
-valid_background_words = ValidBackgroundWords(valid_words_config)
-valid_foreground_words = ValidForegroundWords(config=config, db=connection)
+#valid_background_words = ValidBackgroundWords(valid_words_config)
+#valid_foreground_words = ValidForegroundWords(config=config, db=connection)
 
 
 
@@ -85,15 +85,16 @@ popped_items_counter = Counter(name='background_cache_items_popped_counter',
 
 
 
-service = translation_service.TranslationService(
+service = neural.translation_service.TranslationService(
   instance_id='',
   conf=config,
-  review=False,
+  #review=False,
   db=connection,
   debug=debug,
   cache_items_counters=(inserted_items_counter, popped_items_counter),
-  valid_background_words=valid_background_words,
-  valid_foreground_words=valid_foreground_words,
+  #valid_background_words=valid_background_words,
+  #valid_foreground_words=valid_foreground_words,
+  valid_words_languages=set(['en', 'zh']),
   specific_language_pairs=specific_language_pairs
 )
 
